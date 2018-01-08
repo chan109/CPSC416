@@ -100,11 +100,16 @@ func main() {
 	srcAddr := &net.UDPAddr{IP: sip, Port: 8000}
 	dstAddr := &net.UDPAddr{IP: dip, Port: 5555}
 	conn, err := net.DialUDP("udp", srcAddr, dstAddr)
+	data := make([]byte, 1024)
+	conn.ReadFromUDP(data)
+
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer conn.Close()
 	conn.Write([]byte("hello"))
+
+	fmt.Printf("<%s>\n", data)
 	fmt.Printf("<%s>\n", conn.RemoteAddr())
 
 	////TCP test
