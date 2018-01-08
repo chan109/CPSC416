@@ -87,7 +87,7 @@ func main() {
 	// TODO
 	// Use json.Marshal json.Unmarshal for encoding/decoding to servers
 
-	//UDP test
+	//UDP(work!!)
 	udp := netWorkutils.UdpConnection{"198.162.33.54:5555","hello"}
 	netWorkutils.Connect(udp)
 

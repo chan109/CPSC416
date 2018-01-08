@@ -24,13 +24,41 @@ type TcpConnection struct{
 }
 
 //private method for udp connection
-func (udp UdpConnection) connect(){
-	p :=  make([]byte, 2048)
-	conn, err := net.Dial("udp", udp.Host)
-	if err != nil {
-		fmt.Printf("Some error %v", err)
-		return
+//func (udp UdpConnection) connect(){
+//	p :=  make([]byte, 2048)
+//	conn, err := net.Dial("udp", udp.Host)
+//	if err != nil {
+//		fmt.Printf("Some error %v", err)
+//		return
+//	}
+//	fmt.Fprintf(conn, udp.Msg)
+//	_, err = bufio.NewReader(conn).Read(p)
+//	if err == nil {
+//		fmt.Printf("%s\n", p[:bytes.Index(p, []byte{0})])
+//	} else {
+//		fmt.Printf("Some error %v\n", err)
+//	}
+//	conn.Close()
+//}
+
+func CheckError(err error) {
+	if err  != nil {
+		fmt.Println("Error: " , err)
 	}
+}
+
+//private method for udp connection(accept local and remote address)
+func (udp UdpConnection) connect(){
+	sip, err := net.ResolveUDPAddr("udp","198.162.33.23:8888")
+	CheckError(err)
+	//checkerror
+	dip, err := net.ResolveUDPAddr("udp",udp.Host)
+	CheckError(err)
+	//checkerror
+
+	conn, err := net.DialUDP("udp", sip, dip)
+	p :=  make([]byte, 2048)
+
 	fmt.Fprintf(conn, udp.Msg)
 	_, err = bufio.NewReader(conn).Read(p)
 	if err == nil {
@@ -39,6 +67,8 @@ func (udp UdpConnection) connect(){
 		fmt.Printf("Some error %v\n", err)
 	}
 	conn.Close()
+
+
 }
 
 //private method for tcp connection
