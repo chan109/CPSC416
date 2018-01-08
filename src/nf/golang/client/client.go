@@ -39,11 +39,8 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"net"
 	//"nf/golang/netWorkutils"
-	//"nf/golang/shareutils"
-	"fmt"
-	//"nf/golang/netWorkutils"
+	"nf/golang/netWorkutils"
 )
 
 /////////// Msgs used by both auth and fortune servers:
@@ -91,26 +88,8 @@ func main() {
 	// Use json.Marshal json.Unmarshal for encoding/decoding to servers
 
 	//UDP test
-	//udp := netWorkutils.UdpConnection{"198.162.33.54:5555","hello"}
-	//netWorkutils.Connect(udp)
-
-	//UDPTest
-	sip := net.ParseIP("198.162.33.23")
-	dip := net.ParseIP("198.162.33.54")
-	srcAddr := &net.UDPAddr{IP: sip, Port: 8000}
-	dstAddr := &net.UDPAddr{IP: dip, Port: 5555}
-	conn, err := net.DialUDP("udp", srcAddr, dstAddr)
-	data := make([]byte, 1024)
-	conn.ReadFromUDP(data)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer conn.Close()
-	conn.Write([]byte("hello"))
-
-	fmt.Printf("<%s>\n", data)
-	fmt.Printf("<%s>\n", conn.RemoteAddr())
+	udp := netWorkutils.UdpConnection{"198.162.33.54:5555","hello"}
+	netWorkutils.Connect(udp)
 
 	////TCP test
 	//tcp := netWorkutils.TcpConnection{"127.0.0.1:1234","bye"}
