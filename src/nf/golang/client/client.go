@@ -104,7 +104,7 @@ func main() {
 	endCodedFortunce := FortuneReqMessage{fortuneNonce}
 	bTcp, _:=json.Marshal(endCodedFortunce)
 
-	answer := sendMsgTcp(fserverIp,string(bTcp), "128.189.116.128:8788")
+	answer := sendMsgTcp(fserverIp,string(bTcp), args[1])
 	var decodedAnswer FortuneMessage
 	json.Unmarshal([]byte(answer), &decodedAnswer)
 	fmt.Println(decodedAnswer.Fortune)
