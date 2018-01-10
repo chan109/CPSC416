@@ -5,22 +5,31 @@ import (
 	"net"
 	"bufio"
 	"bytes"
+	//"encoding/json"
+	//"log"
 )
 
-type connection interface {
-	connect()
-}
+//one way to define interface
+//type connection interface {
+//	Connect()
+//}
 
 // Export udp struct definition
 type UdpConnection struct{
 	Host string
 	Msg string
+	LocalAddr string
 }
 
 // Export tcp struct definition
 type TcpConnection struct{
 	Host string
 	Msg string
+	LocalAddr string
+}
+
+type FortuneReqMessage struct {
+	FortuneNonce int64
 }
 
 //private method for udp connection
@@ -47,58 +56,80 @@ func CheckError(err error) {
 	}
 }
 
+func readData(conn *net.UDPConn, err error) string{
+	p :=  make([]byte, 2048)
+
+	_, err = bufio.NewReader(conn).Read(p)
+	if err == nil {
+		conn.Close()
+		return string(p[:bytes.Index(p, []byte{0})])
+	} else {
+		fmt.Printf("Some error %v\n", err)
+		conn.Close()
+		return "-1"
+	}
+}
+
 //private method for udp connection(accept local and remote address)
-func (udp UdpConnection) connect(){
-	sip, err := net.ResolveUDPAddr("udp","198.162.33.23:8888")
+//udp local address has to be the public one "128.189.112.244:8888" or run curl ipinfo.io/ip to help getting the public ip
+func (udp UdpConnection) Connect() string{
+
+	p :=  make([]byte, 2048)
+
+	//get local ip
+	sip, err := net.ResolveUDPAddr("udp",udp.LocalAddr)
 	CheckError(err)
-	//checkerror
+
+	//get remote ip
 	dip, err := net.ResolveUDPAddr("udp",udp.Host)
 	CheckError(err)
-	//checkerror
 
 	conn, err := net.DialUDP("udp", sip, dip)
-	p :=  make([]byte, 2048)
+	CheckError(err)
 
 	fmt.Fprintf(conn, udp.Msg)
 	_, err = bufio.NewReader(conn).Read(p)
 	if err == nil {
-		fmt.Printf("%s\n", p[:bytes.Index(p, []byte{0})])
+		conn.Close()
+		return string(p[:bytes.Index(p, []byte{0})])
+
 	} else {
 		fmt.Printf("Some error %v\n", err)
+		conn.Close()
+		return "-1"
 	}
-	conn.Close()
-
-
 }
 
 //private method for tcp connection
-func (tcp TcpConnection) connect(){
+func (tcp TcpConnection) Connect() string{
 
-	p := make([]byte, 2048)
+	sip, err := net.ResolveTCPAddr("tcp",tcp.LocalAddr)
+	CheckError(err)
+	//checkerror
+	dip, err := net.ResolveTCPAddr("tcp",tcp.Host)
+	CheckError(err)
 
 	// connect to this socket
-	conn, err := net.Dial("tcp", tcp.Host)
-	if err != nil {
-		fmt.Printf("Some error %v", err)
-		return
-	}
-
+	conn, err := net.DialTCP("tcp", sip, dip)
+	CheckError(err)
 	// send to socket
-	fmt.Fprintf(conn, tcp.Msg + "\n")
-	//losten for reply
+
+	p :=  make([]byte, 2048)
+
+	fmt.Fprintf(conn, tcp.Msg)
 	_, err = bufio.NewReader(conn).Read(p)
 	if err == nil {
-		fmt.Printf("%s\n", p[:bytes.Index(p, []byte{0})])
+		//fmt.Printf("%s\n", p[:bytes.Index(p, []byte{0})])
+		conn.Close()
+		return string(p[:bytes.Index(p, []byte{0})])
+
 	} else {
 		fmt.Printf("Some error %v\n", err)
+		conn.Close()
+		return "-1"
 	}
-	conn.Close()
 
 }
 
-// Export method for TCP/UP connection
-func Connect(obj connection)  {
-	obj.connect()
-}
 
 

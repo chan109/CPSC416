@@ -1,28 +1,3 @@
-//package main
-//
-//import (
-//	"bufio"
-//	"fmt"
-//	"net"
-//)
-//
-//func main() {
-//	p := make([]byte, 2048)
-//	conn, err := net.Dial("udp", "127.0.0.1:1234")
-//	if err != nil {
-//		fmt.Printf("Some error %v", err)
-//		return
-//	}
-//	fmt.Fprintf(conn, "Hi UDP Server, How are you doing?")
-//	_, err = bufio.NewReader(conn).Read(p)
-//	if err == nil {
-//		fmt.Printf("%s\n", p)
-//	} else {
-//		fmt.Printf("Some error %v\n", err)
-//	}
-//	conn.Close()
-//}
-
 /*
 Implements the solution to assignment 1 for UBC CS 416 2017 W2.
 
@@ -39,8 +14,13 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
-	//"nf/golang/netWorkutils"
+	"math/rand"
+	"fmt"
+	"time"
 	"nf/golang/netWorkutils"
+	"nf/golang/shareutils"
+	"encoding/json"
+	"log"
 )
 
 /////////// Msgs used by both auth and fortune servers:
@@ -82,21 +62,106 @@ type FortuneMessage struct {
 	Rank    int64 // Rank of this client solution
 }
 
+func throwError(){
+	panic("THere is an error")
+}
+
 // Main workhorse method.
 func main() {
-	// TODO
-	// Use json.Marshal json.Unmarshal for encoding/decoding to servers
+	var args[]string = shareutils.ParseCommandLine()
 
-	//UDP(work!!)
-	udp := netWorkutils.UdpConnection{"198.162.33.54:5555","hello"}
-	netWorkutils.Connect(udp)
+	//get the nonece msg through UDP
+	var str = sendMsgUdp(args[2],"hello", args[0])
+	var nonceMsg NonceMessage
+	var fserverIp string
+	var fortuneNonce int64
 
-	////TCP test
-	//tcp := netWorkutils.TcpConnection{"127.0.0.1:1234","bye"}
-	//netWorkutils.Connect(tcp)
+	//parse the nonce
+	if(str == "-1"){
+		throwError()
+	}else{
+		if err := json.Unmarshal([]byte(str), &nonceMsg); err != nil{
+			log.Fatal(err)
+		}
+	}
 
-	//fmt.Print(shareutils.ParseCommandLine())
+	//find the secret using the parsed nonce
+	secret :=findSecret(nonceMsg.Nonce,nonceMsg.N)
 
+	encodedSecret:= SecretMessage{secret}
+	bUdp, err := json.Marshal(encodedSecret)
+	if err != nil{
+		throwError()
+	}
+
+	var fortuneInfoMsg = sendMsgUdp(args[2],string(bUdp), args[1])
+	var decodedFortuneMsg FortuneInfoMessage
+	json.Unmarshal([]byte(fortuneInfoMsg), &decodedFortuneMsg)
+	fserverIp = decodedFortuneMsg.FortuneServer
+	fortuneNonce = decodedFortuneMsg.FortuneNonce
+
+	//TCP test
+	endCodedFortunce := FortuneReqMessage{fortuneNonce}
+	bTcp, _:=json.Marshal(endCodedFortunce)
+
+	answer := sendMsgTcp(fserverIp,string(bTcp), "128.189.116.128:8788")
+	var decodedAnswer FortuneMessage
+	json.Unmarshal([]byte(answer), &decodedAnswer)
+	fmt.Println(decodedAnswer.Fortune)
+
+}
+
+//send message through udp to server
+func sendMsgUdp(host string, msg string, localAddr string) string  {
+	udp := netWorkutils.UdpConnection{host,msg, localAddr}
+	return udp.Connect()
+}
+
+//send message through tcp to server
+func sendMsgTcp(host string, msg string, localAddr string) string  {
+	tcp := netWorkutils.TcpConnection{host,msg, localAddr}
+	return tcp.Connect()
+}
+
+//if no solution is found, it runs forever
+func findSecret(nonece string, N int64) string{
+	for{
+		var valToCompute string = RandStringRunes(8)
+		var computedHash string = computeNonceSecretHash(nonece, valToCompute)
+		if(checkHash(N, computedHash)){
+			//fmt.Println("Found the valid hash: %s", string(computedHash))
+			//fmt.Println("Found the valid secret: %s", valToCompute)
+			return valToCompute
+		}
+	}
+}
+
+//check the N zeros at the end of the computed hash
+func checkHash(N int64, hash string) bool{
+	for i := int64(len(hash) -1); i>int64(len(hash))-N-1; i--{
+		if(string(hash[i]) != "0") {
+			return false
+		}
+	}
+
+	//check if the position N+1 is zeros of not
+	if(string(hash[int64(len(hash))-N-1]) != "0"){
+		return true
+	}else{
+		return false
+	}
+}
+
+//Generate random string
+var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandStringRunes(n int) string {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 
 
 }
