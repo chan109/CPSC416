@@ -32,24 +32,6 @@ type FortuneReqMessage struct {
 	FortuneNonce int64
 }
 
-//private method for udp connection
-//func (udp UdpConnection) connect(){
-//	p :=  make([]byte, 2048)
-//	conn, err := net.Dial("udp", udp.Host)
-//	if err != nil {
-//		fmt.Printf("Some error %v", err)
-//		return
-//	}
-//	fmt.Fprintf(conn, udp.Msg)
-//	_, err = bufio.NewReader(conn).Read(p)
-//	if err == nil {
-//		fmt.Printf("%s\n", p[:bytes.Index(p, []byte{0})])
-//	} else {
-//		fmt.Printf("Some error %v\n", err)
-//	}
-//	conn.Close()
-//}
-
 func CheckError(err error) {
 	if err  != nil {
 		fmt.Println("Error: " , err)
@@ -91,6 +73,7 @@ func (udp UdpConnection) Connect() string{
 	_, err = bufio.NewReader(conn).Read(p)
 	if err == nil {
 		conn.Close()
+		fmt.Println(string(p[:bytes.Index(p, []byte{0})]))
 		return string(p[:bytes.Index(p, []byte{0})])
 
 	} else {
