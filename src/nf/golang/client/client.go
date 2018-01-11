@@ -162,8 +162,6 @@ func RandStringRunes(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
-
-
 }
 
 // Returns the MD5 hash as a hex netWorkutils for the (nonce + secret) value.

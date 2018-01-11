@@ -24,6 +24,7 @@ import (
 	"net"
 	"flag"
 	"os"
+	"strconv"
 )
 
 /////////// Msgs used by both auth and fortune servers:
@@ -119,6 +120,7 @@ func (udp UdpConnection) Connect() string{
 	_, err = bufio.NewReader(conn).Read(p)
 	if err == nil {
 		conn.Close()
+		// For debugging purposes:
 		fmt.Println(string(p[:bytes.Index(p, []byte{0})]))
 		return string(p[:bytes.Index(p, []byte{0})])
 
@@ -224,6 +226,8 @@ func main() {
 	var decodedAnswer FortuneMessage
 	json.Unmarshal([]byte(answer), &decodedAnswer)
 	fmt.Println(decodedAnswer.Fortune)
+	fmt.Println(decodedAnswer.Rank)
+
 
 }
 
@@ -241,19 +245,26 @@ func sendMsgTcp(host string, msg string, localAddr string) string  {
 
 //if no solution is found, it runs forever
 func findSecret(nonece string, N int64) string{
+	var counter int64 = 0;
 	for{
-		var valToCompute string = RandStringRunes(8)
+		//var valToCompute string = RandStringRunes(8)
+		var valToCompute string = RandStringRunes2(counter)
 		var computedHash string = computeNonceSecretHash(nonece, valToCompute)
 		if(checkHash(N, computedHash)){
 			//fmt.Println("Found the valid hash: %s", string(computedHash))
-			//fmt.Println("Found the valid secret: %s", valToCompute)
+			fmt.Println("Found the valid secret: %s", valToCompute)
 			return valToCompute
 		}
+
+		counter ++
 	}
 }
 
 //check the N zeros at the end of the computed hash
 func checkHash(N int64, hash string) bool{
+
+	N = 7
+
 	for i := int64(len(hash) -1); i>int64(len(hash))-N-1; i--{
 		if(string(hash[i]) != "0") {
 			return false
@@ -271,6 +282,7 @@ func checkHash(N int64, hash string) bool{
 //Generate random string
 var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+// string is made of abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 func RandStringRunes(n int) string {
 	rand.Seed(time.Now().UnixNano())
 	b := make([]byte, n)
@@ -278,6 +290,13 @@ func RandStringRunes(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+// secrets is made of integer(1,2,3,4,5,6,7,8,9,10)
+func RandStringRunes2(n int64) string {
+
+	//return strconv.Itoa(n)
+	return strconv.FormatInt(n, 10)
 }
 
 // Returns the MD5 hash as a hex netWorkutils for the (nonce + secret) value.
