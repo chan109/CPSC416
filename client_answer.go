@@ -250,7 +250,6 @@ func findSecret(nonece string, N int64) string{
 		//var valToCompute string = RandStringRunes(8)
 		var valToCompute string = RandStringRunes2(counter)
 
-		fmt.Println(valToCompute)
 		var computedHash string = computeNonceSecretHash(nonece, valToCompute)
 		if(checkHash(N, computedHash)){
 			//fmt.Println("Found the valid hash: %s", string(computedHash))
