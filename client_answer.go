@@ -245,7 +245,7 @@ func sendMsgTcp(host string, msg string, localAddr string) string  {
 
 //if no solution is found, it runs forever
 func findSecret(nonece string, N int64) string{
-	var counter int64 = 0;
+	var counter int = 0;
 	for{
 		//var valToCompute string = RandStringRunes(8)
 		var valToCompute string = RandStringRunes2(counter)
@@ -293,10 +293,10 @@ func RandStringRunes(n int) string {
 }
 
 // secrets is made of integer(1,2,3,4,5,6,7,8,9,10)
-func RandStringRunes2(n int64) string {
+func RandStringRunes2(n int) string {
 
-	//return strconv.Itoa(n)
-	return strconv.FormatInt(n, 10)
+	return strconv.Itoa(n)
+	//return strconv.FormatInt(n, 10)
 }
 
 // Returns the MD5 hash as a hex netWorkutils for the (nonce + secret) value.
